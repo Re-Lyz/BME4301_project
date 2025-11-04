@@ -20,6 +20,7 @@ class ImageViewer(QMainWindow):
         self.setAcceptDrops(True)
 
         # --- 中心视图：可滚动的 QLabel 显示图像 ---
+        self._pm_orig: QPixmap | None = None
         self.image_label = QLabel(alignment=Qt.AlignCenter)
         self.image_label.setBackgroundRole(self.image_label.backgroundRole())
         self.image_label.setScaledContents(False)  # 用缩放函数控制，避免失真
@@ -112,13 +113,14 @@ class ImageViewer(QMainWindow):
         self.act_fit.setChecked(False)
         self.image_label.setPixmap(pm)
         self.image_label.adjustSize()
+        self._apply_scale(1.0)
         self._update_actions()
         self._update_status()
 
     # ---------------- 视图/缩放 ----------------
     def set_fit_to_window(self, enabled: bool) -> None:
         self._fit_to_window = enabled
-        self.image_label.setScaledContents(enabled)
+        self.image_label.setScaledContents(False)
         if enabled:
             self._fit_image_to_scrollarea()
         else:
@@ -127,27 +129,29 @@ class ImageViewer(QMainWindow):
         self._update_status()
 
     def _fit_image_to_scrollarea(self) -> None:
-        if not self._pixmap:
+        if not self._pm_orig:
             return
         area = self.scroll_area.viewport().size()
-        pm_size = self._pixmap.size()
+        pm_size = self._pm_orig.size()
         if pm_size.isEmpty():
             return
         sx = area.width() / pm_size.width()
         sy = area.height() / pm_size.height()
-        self._scale = min(sx, sy)
-        self.image_label.resize(self._scale * pm_size)
-        self._update_status()
+        self._apply_scale(min(sx, sy))
+
+    def _adjust_scrollbars(self, factor: float) -> None:
+        for sb in (self.scroll_area.horizontalScrollBar(), self.scroll_area.verticalScrollBar()):
+            sb.setValue(int(factor * sb.value() + ((factor - 1) * sb.pageStep() / 2)))
 
     def scale_image(self, factor: float) -> None:
-        if not self._pixmap:
+        if not self._pm_orig or self._fit_to_window:
             return
-        if self._fit_to_window:
-            # 适应窗口模式下禁用手动缩放
+        new_scale = max(0.05, min(self._scale * factor, 40.0))
+        if new_scale == self._scale:
             return
-        new_scale = self._scale * factor
-        new_scale = max(0.05, min(new_scale, 40.0))  # 防止过度缩放
+        ratio = new_scale / self._scale
         self._apply_scale(new_scale)
+        self._adjust_scrollbars(ratio)
 
     def reset_zoom(self) -> None:
         if not self._pixmap:
@@ -155,13 +159,18 @@ class ImageViewer(QMainWindow):
         self._apply_scale(1.0)
 
     def _apply_scale(self, new_scale: float) -> None:
-        assert self._pixmap is not None
+        assert self._pm_orig is not None
         self._scale = new_scale
-        pm_size = self._pixmap.size()
-        new_size = (pm_size * self._scale).toSizeF()
-        self.image_label.resize(new_size)
-        self._update_status()
+        orig_size = self._pm_orig.size()
+        w = max(1, int(round(orig_size.width() * self._scale)))
+        h = max(1, int(round(orig_size.height() * self._scale)))
 
+        scaled = self._pm_orig.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.image_label.setPixmap(scaled)
+        self.image_label.resize(scaled.size())
+        self._update_status()
+        
+        
     # ---------------- 交互增强：拖拽 & 滚轮缩放 ----------------
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls():
