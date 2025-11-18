@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 from task1 import Task1Window
 from task2 import Task2Window
+from task3 import Task3Window
 
 class ImageViewer(QMainWindow):
     def __init__(self) -> None:
@@ -54,15 +55,26 @@ class ImageViewer(QMainWindow):
         # ====== 3. 预先创建几个功能页面（空壳，之后你再填内容） ======
         self.page_func1 = Task1Window(self)
         self.page_func2 = Task2Window(self)
-
-        self.page_func3 = QWidget()
-        l3 = QVBoxLayout(self.page_func3)
-        l3.addWidget(QLabel("这里是 功能3 页面"))
+        self.page_func3 = Task3Window(self)
+        
+        self.page_func4 = QWidget()
+        l4 = QVBoxLayout(self.page_func4)
+        l4.addWidget(QLabel("这里是 功能4 页面"))
+        
+        self.page_func5 = QWidget()
+        l5 = QVBoxLayout(self.page_func5)
+        l5.addWidget(QLabel("这里是 功能5 页面"))
+        
+        self.page_func6 = QWidget()
+        l6 = QVBoxLayout(self.page_func6)
+        l6.addWidget(QLabel("这里是 功能6 页面"))
 
         self.stack.addWidget(self.page_func1)   # index = 1
         self.stack.addWidget(self.page_func2)   # index = 2
         self.stack.addWidget(self.page_func3)   # index = 3
-
+        self.stack.addWidget(self.page_func4)   # index = 4
+        self.stack.addWidget(self.page_func5)   # index = 5
+        self.stack.addWidget(self.page_func6)   # index = 6
         # 默认显示图像浏览页面
         self.stack.setCurrentWidget(self.page_image)
 
@@ -102,8 +114,17 @@ class ImageViewer(QMainWindow):
         self.act_func2 = QAction("功能二：卷积与滤波", self)
         self.act_func2.triggered.connect(self.show_func2_page)
 
-        self.act_func3 = QAction("功能三：任务3", self)
+        self.act_func3 = QAction("功能三：二值形态学基础功能", self)
         self.act_func3.triggered.connect(self.show_func3_page)
+        
+        # self.act_func4 = QAction("功能四：任务4", self)
+        # self.act_func4.triggered.connect(self.show_func4_page)
+        
+        # self.act_func5 = QAction("功能五：任务5", self)
+        # self.act_func5.triggered.connect(self.show_func5_page)
+        
+        # self.act_func6 = QAction("功能六：任务6", self)
+        # self.act_func6.triggered.connect(self.show_func6_page)
 
     def _create_menus_and_toolbar(self) -> None:
         menu_file = self.menuBar().addMenu("文件(&F)")
@@ -125,6 +146,9 @@ class ImageViewer(QMainWindow):
         menu_func.addAction(self.act_func1)
         menu_func.addAction(self.act_func2)
         menu_func.addAction(self.act_func3)
+        # menu_func.addAction(self.act_func4)
+        # menu_func.addAction(self.act_func5)
+        # menu_func.addAction(self.act_func6)
 
         tb = QToolBar("Main", self)
         tb.setIconSize(QSize(18, 18))
@@ -155,6 +179,14 @@ class ImageViewer(QMainWindow):
             # 如果当前在图像浏览页，就什么都不做（自然就是默认界面）
             elif current is self.page_func2:
                 self.page_func2.set_image(self._pm_orig)
+            elif current is self.page_func3:
+                self.page_func3.set_image(self._pm_orig)
+            # elif current is self.page_func4:
+            #     self.page_func4.set_image(self._pm_orig)
+            # elif current is self.page_func5:
+            #     self.page_func5.set_image(self._pm_orig)
+            # elif current is self.page_func6:
+            #     self.page_func6.set_image(self._pm_orig)
                 
 
     def load_path(self, path: Path) -> None:
@@ -262,6 +294,14 @@ class ImageViewer(QMainWindow):
                     self.page_func1.set_image(self._pm_orig)
                 elif current is self.page_func2:
                     self.page_func2.set_image(self._pm_orig)
+                # elif current is self.page_func3:
+                #     self.page_func3.set_image(self._pm_orig)
+                # elif current is self.page_func4:
+                #     self.page_func4.set_image(self._pm_orig)
+                # elif current is self.page_func5:
+                #     self.page_func5.set_image(self._pm_orig)
+                # elif current is self.page_func6:
+                #     self.page_func6.set_image(self._pm_orig)
         else:
             super().dropEvent(e)
 
@@ -302,6 +342,7 @@ class ImageViewer(QMainWindow):
         self._update_status()
 
     def show_func3_page(self):
+        self.page_func3.set_image(self._pm_orig)
         self.stack.setCurrentWidget(self.page_func3)
         self._update_actions()
         self._update_status()
@@ -326,6 +367,12 @@ class ImageViewer(QMainWindow):
                 self.statusBar().showMessage("功能2 页面")
             elif current is self.page_func3:
                 self.statusBar().showMessage("功能3 页面")
+            elif current is self.page_func4:
+                self.statusBar().showMessage("功能4 页面")
+            elif current is self.page_func5:
+                self.statusBar().showMessage("功能5 页面")
+            elif current is self.page_func6:
+                self.statusBar().showMessage("功能6 页面")
             else:
                 self.statusBar().showMessage("就绪")
             return
@@ -344,37 +391,6 @@ class ImageViewer(QMainWindow):
         if self._fit_to_window and self.stack.currentWidget() is self.page_image:
             self._fit_image_to_scrollarea()
 
-# class Task1Window(QWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.setWindowTitle("功能一：任务1视窗")
-#         self.resize(600, 400)
-
-#         layout = QVBoxLayout(self)
-#         label = QLabel("这里是功能一（任务1）的界面，你可以在这里放自己的控件。")
-#         label.setAlignment(Qt.AlignCenter)
-#         layout.addWidget(label)
 
 
-# class Task2Window(QWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.setWindowTitle("功能二：任务2视窗")
-#         self.resize(600, 400)
 
-#         layout = QVBoxLayout(self)
-#         label = QLabel("这里是功能二（任务2）的界面。")
-#         label.setAlignment(Qt.AlignCenter)
-#         layout.addWidget(label)
-
-
-class Task3Window(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("功能三：任务3视窗")
-        self.resize(600, 400)
-
-        layout = QVBoxLayout(self)
-        label = QLabel("这里是功能三（任务3）的界面。")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
