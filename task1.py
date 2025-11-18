@@ -9,8 +9,12 @@ from qtpy.QtWidgets import (
     QSlider,
     QLineEdit,
     QPushButton,
+    QFileDialog,      
+    QMessageBox,      
 )
 import numpy as np
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
 class Task1Window(QWidget):
@@ -65,6 +69,9 @@ class Task1Window(QWidget):
         btn_entropy = QPushButton("Entropy 自动阈值")
         btn_entropy.clicked.connect(self._apply_entropy)
 
+        btn_save = QPushButton("保存结果")
+        btn_save.clicked.connect(self._save_result)
+
         controls_layout.addWidget(lbl_manual)
         controls_layout.addWidget(self.slider_thresh, stretch=1)
         controls_layout.addWidget(self.edit_thresh)
@@ -72,18 +79,22 @@ class Task1Window(QWidget):
         controls_layout.addSpacing(20)
         controls_layout.addWidget(btn_otsu)
         controls_layout.addWidget(btn_entropy)
+        controls_layout.addSpacing(10)         
+        controls_layout.addWidget(btn_save)     
         controls_layout.addStretch()
 
         # ---- 下方：直方图 ----
-        self.label_hist = QLabel("直方图：无图像")
-        self.label_hist.setAlignment(Qt.AlignCenter)
-        self.label_hist.setMinimumHeight(150)
-        self.label_hist.setStyleSheet("background: black; color: white;")
-        self.label_hist.setScaledContents(True)
+        self.fig = Figure(figsize=(4, 2), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_facecolor("black")
+
+        # 嵌入到 Qt 的画布
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setMinimumHeight(150)
 
         main_layout.addLayout(img_layout, stretch=3)
         main_layout.addLayout(controls_layout, stretch=0)
-        main_layout.addWidget(self.label_hist, stretch=2)
+        main_layout.addWidget(self.canvas, stretch=2)
 
     # ---------------- 对外接口：由主窗口调用 ----------------
     def set_image(self, pm: QPixmap | None):
@@ -97,8 +108,8 @@ class Task1Window(QWidget):
             self.label_orig.setPixmap(QPixmap())
             self.label_result.setText("阈值结果：无图像")
             self.label_result.setPixmap(QPixmap())
-            self.label_hist.setText("直方图：无图像")
-            self.label_hist.setPixmap(QPixmap())
+            # self.label_hist.setText("直方图：无图像")
+            # self.label_hist.setPixmap(QPixmap())
             return
 
         self.label_orig.setText("")
@@ -118,43 +129,67 @@ class Task1Window(QWidget):
         self._apply_threshold(self._current_thresh, sync_controls=True)
         self._refresh_previews()
 
+    def _save_result(self):
+        """保存当前阈值处理后的图像"""
+        if self._result_pixmap is None:
+            QMessageBox.information(self, "保存结果", "当前没有可保存的结果，请先应用阈值。")
+            return
+
+        fname, _ = QFileDialog.getSaveFileName(
+            self,
+            "保存处理结果",
+            "",
+            "PNG 图像 (*.png);;JPEG 图像 (*.jpg *.jpeg);;所有文件 (*)",
+        )
+        if not fname:
+            return
+
+        ok = self._result_pixmap.save(fname)
+        if not ok:
+            QMessageBox.warning(self, "保存失败", f"无法保存到：\n{fname}")
+        else:
+            QMessageBox.information(self, "保存成功", f"已保存到：\n{fname}")
+
+
     # ---------------- 直方图（灰 + 红线） ----------------
     def _update_histogram(self):
+        """用 matplotlib 绘制直方图 + 当前阈值红线 + 坐标轴"""
+        self.ax.clear()  # 清空上次内容
+
         if self._gray is None:
-            self.label_hist.setText("直方图：无图像")
-            self.label_hist.setPixmap(QPixmap())
+            # 没有图像就显示文字
+            self.ax.set_facecolor("black")
+            self.ax.text(
+                0.5, 0.5, "直方图：无图像",
+                color="white", ha="center", va="center", transform=self.ax.transAxes
+            )
+            self.ax.set_xticks([])
+            self.ax.set_yticks([])
+            self.canvas.draw()
             return
 
+        # 计算直方图
         hist, _ = np.histogram(self._gray, bins=256, range=(0, 256))
-        maxc = hist.max()
-        if maxc == 0:
-            self.label_hist.setText("直方图：空")
-            self.label_hist.setPixmap(QPixmap())
-            return
 
-        w, h = 256, 150
-        canvas = np.zeros((h, w, 3), dtype=np.uint8)
+        # 画灰色的柱状图
+        x = np.arange(256)
+        self.ax.bar(x, hist, width=1.0, color="0.7", edgecolor="0.7")
 
-        # 灰色柱子
-        for x in range(256):
-            bar_h = int(hist[x] / maxc * (h - 1))
-            if bar_h > 0:
-                canvas[h - bar_h :, x, :] = (200, 200, 200)
-
-        # 红色竖线
+        # 画当前阈值的红色竖线
         t = int(np.clip(self._current_thresh, 0, 255))
-        canvas[:, t, :] = (255, 0, 0)
+        self.ax.axvline(t, color="red", linewidth=2)
 
-        qimg = QImage(
-            canvas.data,
-            w,
-            h,
-            3 * w,
-            QImage.Format_RGB888,
-        ).copy()
+        # 设置坐标轴和标题
+        self.ax.set_xlim(0, 255)
+        self.ax.set_xlabel("Gray level")
+        self.ax.set_ylabel("Pixel count")
+        self.ax.set_title("Histogram")
 
-        self.label_hist.setPixmap(QPixmap.fromImage(qimg))
-        self.label_hist.setText("")
+        # 让背景更像“数据图表”的风格
+        self.ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
+
+        self.canvas.draw()
+
 
     # ---------------- 阈值应用 ----------------
     def _apply_threshold(self, thresh: int, sync_controls: bool = False):

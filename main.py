@@ -1,7 +1,6 @@
 """
-image_viewer_pyside6.py — 一个最小但好用的图片读取/查看 GUI 框架
 依赖：PySide6  (pip install PySide6)
-运行：python image_viewer_pyside6.py
+运行：python main.py
 
 功能要点：
 - 打开图片（菜单/工具栏/快捷键 Ctrl+O）
@@ -12,8 +11,6 @@ image_viewer_pyside6.py — 一个最小但好用的图片读取/查看 GUI 框�
 - 状态栏显示分辨率 & 缩放比例
 - 滚动查看大图（QScrollArea）
 
-可作为你项目中图像标注/处理工具的骨架，后续可在此基础上新增：
-- Recent Files、批量浏览、图像处理管线（OpenCV/Pillow）、ROI/绘制层、快捷键映射等。
 
 直方图与均衡化
 卷积操作
