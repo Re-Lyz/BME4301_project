@@ -14,6 +14,7 @@ from qtpy.QtWidgets import (
     QSizePolicy,
 )
 import numpy as np
+import cv2
 
 
 class JLabelWithBg(QLabel):
@@ -142,10 +143,10 @@ class Task4Window(QWidget):
         if not hasattr(self, "combo_se_type"):
             # 构造过程中可能会提前被调用一下，防御一下
             return
-    
+
         se_type = self.combo_se_type.currentData()
         size = self.spin_se_size.value()
-    
+
         # 保证 size >= 1 且为奇数（形态学运算居中好处理）
         if size < 1:
             size = 1
@@ -155,35 +156,35 @@ class Task4Window(QWidget):
             self.spin_se_size.blockSignals(True)
             self.spin_se_size.setValue(size)
             self.spin_se_size.blockSignals(False)
-    
+
         self._se_type = se_type
         self._se_size = size
         self._se = self._create_se(se_type, size)
-    
+
         # 可以顺便在状态栏展示一下
         self.label_info.setText(
             f"当前结构元素: {se_type}, 尺寸 {size}×{size}"
         )
-    
+
     def _create_se(self, se_type: str, size: int) -> np.ndarray:
         """根据类型和外接正方形边长生成结构元素（布尔数组）。"""
         if size <= 1:
             return np.ones((1, 1), dtype=bool)
-    
+
         if se_type == "square":
             # 正方形：全 1
             return np.ones((size, size), dtype=bool)
-    
+
         h = w = size
         se = np.zeros((h, w), dtype=bool)
         cy, cx = h // 2, w // 2
-    
+
         if se_type == "cross":
             # 十字架：中心行 + 中心列
             se[cy, :] = True
             se[:, cx] = True
             return se
-    
+
         if se_type == "disk":
             # 圆形：外接正方形内，(x-cx)^2 + (y-cy)^2 <= r^2
             r = size / 2.0
@@ -192,7 +193,7 @@ class Task4Window(QWidget):
                     if (y - cy) ** 2 + (x - cx) ** 2 <= r ** 2:
                         se[y, x] = True
             return se
-    
+
         # 兜底：未知类型默认正方形
         return np.ones((size, size), dtype=bool)
 
@@ -306,36 +307,43 @@ class Task4Window(QWidget):
 
     # ---------------- 形态学基础算子 ----------------
     def _dilate(self, img: np.ndarray, se: np.ndarray) -> np.ndarray:
-        img_bool = img.astype(bool)
-        se_bool = se.astype(bool)
-        h, w = img_bool.shape
-        sh, sw = se_bool.shape
-        ph, pw = sh // 2, sw // 2
+        # img_bool = img.astype(bool)
+        # se_bool = se.astype(bool)
+        # h, w = img_bool.shape
+        # sh, sw = se_bool.shape
+        # ph, pw = sh // 2, sw // 2
 
-        padded = np.pad(img_bool, ((ph, ph), (pw, pw)), mode="constant", constant_values=False)
-        out = np.zeros_like(img_bool)
+        # padded = np.pad(img_bool, ((ph, ph), (pw, pw)), mode="constant", constant_values=False)
+        # out = np.zeros_like(img_bool)
 
-        for i in range(h):
-            for j in range(w):
-                region = padded[i : i + sh, j : j + sw]
-                out[i, j] = np.any(region[se_bool])
+        # for i in range(h):
+        #     for j in range(w):
+        #         region = padded[i : i + sh, j : j + sw]
+        #         out[i, j] = np.any(region[se_bool])
+        src = (img > 0).astype(np.uint8)  # 二值化输入
+        kernel = (se > 0).astype(np.uint8)
+        out = cv2.dilate(src, kernel, iterations=1)
 
         return out.astype(np.uint8)
 
     def _erode(self, img: np.ndarray, se: np.ndarray) -> np.ndarray:
-        img_bool = img.astype(bool)
-        se_bool = se.astype(bool)
-        h, w = img_bool.shape
-        sh, sw = se_bool.shape
-        ph, pw = sh // 2, sw // 2
+        # img_bool = img.astype(bool)
+        # se_bool = se.astype(bool)
+        # h, w = img_bool.shape
+        # sh, sw = se_bool.shape
+        # ph, pw = sh // 2, sw // 2
 
-        padded = np.pad(img_bool, ((ph, ph), (pw, pw)), mode="constant", constant_values=False)
-        out = np.zeros_like(img_bool)
+        # padded = np.pad(img_bool, ((ph, ph), (pw, pw)), mode="constant", constant_values=False)
+        # out = np.zeros_like(img_bool)
 
-        for i in range(h):
-            for j in range(w):
-                region = padded[i : i + sh, j : j + sw]
-                out[i, j] = np.all(region[se_bool])
+        # for i in range(h):
+        #     for j in range(w):
+        #         region = padded[i : i + sh, j : j + sw]
+        #         out[i, j] = np.all(region[se_bool])
+        
+        src = (img > 0).astype(np.uint8)  # 二值化输入
+        kernel = (se > 0).astype(np.uint8)
+        out = cv2.erode(src, kernel, iterations=1)
 
         return out.astype(np.uint8)
 
