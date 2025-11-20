@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from task1 import Task1Window
 from task2 import Task2Window
 from task3 import Task3Window
+from task4 import Task4Window
 
 class ImageViewer(QMainWindow):
     def __init__(self) -> None:
@@ -56,10 +57,7 @@ class ImageViewer(QMainWindow):
         self.page_func1 = Task1Window(self)
         self.page_func2 = Task2Window(self)
         self.page_func3 = Task3Window(self)
-        
-        self.page_func4 = QWidget()
-        l4 = QVBoxLayout(self.page_func4)
-        l4.addWidget(QLabel("这里是 功能4 页面"))
+        self.page_func4 = Task4Window(self)
         
         self.page_func5 = QWidget()
         l5 = QVBoxLayout(self.page_func5)
@@ -117,8 +115,8 @@ class ImageViewer(QMainWindow):
         self.act_func3 = QAction("功能三：二值形态学基础功能", self)
         self.act_func3.triggered.connect(self.show_func3_page)
         
-        # self.act_func4 = QAction("功能四：任务4", self)
-        # self.act_func4.triggered.connect(self.show_func4_page)
+        self.act_func4 = QAction("功能四：二值形态学进阶功能", self)
+        self.act_func4.triggered.connect(self.show_func4_page)
         
         # self.act_func5 = QAction("功能五：任务5", self)
         # self.act_func5.triggered.connect(self.show_func5_page)
@@ -146,7 +144,7 @@ class ImageViewer(QMainWindow):
         menu_func.addAction(self.act_func1)
         menu_func.addAction(self.act_func2)
         menu_func.addAction(self.act_func3)
-        # menu_func.addAction(self.act_func4)
+        menu_func.addAction(self.act_func4)
         # menu_func.addAction(self.act_func5)
         # menu_func.addAction(self.act_func6)
 
@@ -181,8 +179,8 @@ class ImageViewer(QMainWindow):
                 self.page_func2.set_image(self._pm_orig)
             elif current is self.page_func3:
                 self.page_func3.set_image(self._pm_orig)
-            # elif current is self.page_func4:
-            #     self.page_func4.set_image(self._pm_orig)
+            elif current is self.page_func4:
+                self.page_func4.set_image(self._pm_orig)
             # elif current is self.page_func5:
             #     self.page_func5.set_image(self._pm_orig)
             # elif current is self.page_func6:
@@ -294,10 +292,10 @@ class ImageViewer(QMainWindow):
                     self.page_func1.set_image(self._pm_orig)
                 elif current is self.page_func2:
                     self.page_func2.set_image(self._pm_orig)
-                # elif current is self.page_func3:
-                #     self.page_func3.set_image(self._pm_orig)
-                # elif current is self.page_func4:
-                #     self.page_func4.set_image(self._pm_orig)
+                elif current is self.page_func3:
+                    self.page_func3.set_image(self._pm_orig)
+                elif current is self.page_func4:
+                    self.page_func4.set_image(self._pm_orig)
                 # elif current is self.page_func5:
                 #     self.page_func5.set_image(self._pm_orig)
                 # elif current is self.page_func6:
@@ -344,6 +342,12 @@ class ImageViewer(QMainWindow):
     def show_func3_page(self):
         self.page_func3.set_image(self._pm_orig)
         self.stack.setCurrentWidget(self.page_func3)
+        self._update_actions()
+        self._update_status()
+        
+    def show_func4_page(self): 
+        self.page_func4.set_image(self._pm_orig)
+        self.stack.setCurrentWidget(self.page_func4)
         self._update_actions()
         self._update_status()
 
