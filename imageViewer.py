@@ -19,6 +19,7 @@ from task2 import Task2Window
 from task3 import Task3Window
 from task4 import Task4Window
 from task5 import Task5Window
+from task6 import Task6Window
 
 class ImageViewer(QMainWindow):
     def __init__(self) -> None:
@@ -60,10 +61,7 @@ class ImageViewer(QMainWindow):
         self.page_func3 = Task3Window(self)
         self.page_func4 = Task4Window(self)
         self.page_func5 = Task5Window(self)
-       
-        self.page_func6 = QWidget()
-        l6 = QVBoxLayout(self.page_func6)
-        l6.addWidget(QLabel("这里是 功能6 页面"))
+        self.page_func6 = Task6Window(self)
 
         self.stack.addWidget(self.page_func1)   # index = 1
         self.stack.addWidget(self.page_func2)   # index = 2
@@ -119,8 +117,8 @@ class ImageViewer(QMainWindow):
         self.act_func5 = QAction("功能五：灰度形态学基础功能", self)
         self.act_func5.triggered.connect(self.show_func5_page)
         
-        # self.act_func6 = QAction("功能六：任务6", self)
-        # self.act_func6.triggered.connect(self.show_func6_page)
+        self.act_func6 = QAction("功能六：灰度形态学高级功能", self)
+        self.act_func6.triggered.connect(self.show_func6_page)
 
     def _create_menus_and_toolbar(self) -> None:
         menu_file = self.menuBar().addMenu("文件(&F)")
@@ -144,7 +142,7 @@ class ImageViewer(QMainWindow):
         menu_func.addAction(self.act_func3)
         menu_func.addAction(self.act_func4)
         menu_func.addAction(self.act_func5)
-        # menu_func.addAction(self.act_func6)
+        menu_func.addAction(self.act_func6)
 
         tb = QToolBar("Main", self)
         tb.setIconSize(QSize(18, 18))
@@ -181,8 +179,8 @@ class ImageViewer(QMainWindow):
                 self.page_func4.set_image(self._pm_orig)
             elif current is self.page_func5:
                 self.page_func5.set_image(self._pm_orig)
-            # elif current is self.page_func6:
-            #     self.page_func6.set_image(self._pm_orig)
+            elif current is self.page_func6:
+                self.page_func6.set_image(self._pm_orig)
                 
 
     def load_path(self, path: Path) -> None:
@@ -296,8 +294,8 @@ class ImageViewer(QMainWindow):
                     self.page_func4.set_image(self._pm_orig)
                 elif current is self.page_func5:
                     self.page_func5.set_image(self._pm_orig)
-                # elif current is self.page_func6:
-                #     self.page_func6.set_image(self._pm_orig)
+                elif current is self.page_func6:
+                    self.page_func6.set_image(self._pm_orig)
         else:
             super().dropEvent(e)
 
@@ -352,6 +350,12 @@ class ImageViewer(QMainWindow):
     def show_func5_page(self):
         self.page_func5.set_image(self._pm_orig)
         self.stack.setCurrentWidget(self.page_func5)
+        self._update_actions()
+        self._update_status()
+        
+    def show_func6_page(self):
+        self.page_func6.set_image(self._pm_orig)
+        self.stack.setCurrentWidget(self.page_func6)
         self._update_actions()
         self._update_status()
 
