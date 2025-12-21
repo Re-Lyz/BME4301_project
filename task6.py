@@ -60,10 +60,10 @@ class Task6Window(QWidget):
         ctrl.addWidget(QLabel("操作:"))
 
         self.combo_op = QComboBox()
-        self.combo_op.addItem("Morphological edge (binary)", "edge")
-        self.combo_op.addItem("Binary reconstruction (conditional dilation)", "bin_recon")
-        self.combo_op.addItem("Gray-scale reconstruction", "gray_recon")
-        self.combo_op.addItem("Morphological gradient (gray)", "grad")
+        self.combo_op.addItem("形态学边缘检测（Morphological edge, binary）", "edge")
+        self.combo_op.addItem("二值重建（Binary reconstruction, conditional dilation）", "bin_recon")
+        self.combo_op.addItem("灰度重建（Gray-scale reconstruction）", "gray_recon")
+        self.combo_op.addItem("形态学梯度（Morphological gradient, gray）", "grad")
         ctrl.addWidget(self.combo_op)
 
         # 结构元素大小
